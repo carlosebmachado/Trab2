@@ -6,18 +6,22 @@
 
 using namespace std;
 
-// globals
+// Globais
 
 unsigned int object;
 vector<vector<float>> vertices;
 vector<vector<int>> faces;
 vector<vector<float>> normais;
 vector<vector<float>> texturas;
-float scaleX, scaleY, scaleZ;
+float scale;
 float translateX, translateY, translateZ;
 float rotX, rotY, rotZ;
 
+bool light1, light2, light3;
 
+void lights();
+
+// Carregando arquivo OBJ
 void loadObj(string fname)
 {
 	int read;
@@ -140,6 +144,15 @@ void keyboard(unsigned char key, int x, int y) {
 		rotY += rand() % 30 - 15;
 		rotZ += rand() % 20 - 10;
 		break;
+	case 'z':
+		light1 = !light1;
+		break;
+	case 'x':
+		light2 = !light2;
+		break;
+	case 'c':
+		light3 = !light3;
+		break;
 	}
 }
 
@@ -164,19 +177,17 @@ void keyboard_special(int key, int x, int y) {
 		break;
 
 	case GLUT_KEY_PAGE_UP:
-		scaleX += 0.1;
-		scaleY += 0.1;
-		scaleZ += 0.1;
+		scale += 0.1;
 		break;
 
 	case GLUT_KEY_PAGE_DOWN:
-		scaleX -= 0.1;
-		scaleY -= 0.1;
-		scaleZ -= 0.1;
+		if(scale > 0.2)
+			scale -= 0.1;
 		break;
 	}
 }
 
+// Função Global de Reshape
 void reshape(int w, int h) {
 	glViewport(0, 0, w, h);
 	glMatrixMode(GL_PROJECTION);
@@ -186,6 +197,7 @@ void reshape(int w, int h) {
 	glMatrixMode(GL_MODELVIEW);
 }
 
+// Função global de desenho
 void drawObject() {
 
 	glPushMatrix();
@@ -195,14 +207,16 @@ void drawObject() {
 	glTranslatef(translateX, translateY, translateZ);
 
 	// escalar
-	glScalef(scaleX, scaleY, scaleZ);
+	glScalef(scale, scale, scale);
 
 	// rotacionar
 	glRotatef(rotX, 1, 0, 0);
 	glRotatef(rotY, 0, 1, 0);
 	glRotatef(rotZ, 0, 0, 1);
 
-	// determina as propriedades do material
+	lights();
+
+	//// determina as propriedades do material
 	GLfloat cor_verde[] = { 0.0, 1.0, 0.0, 1.0 };
 	GLfloat cor_branco[] = { 1.0, 1.0, 1.0, 1.0 };
 	GLfloat cor_azul[] = { 0.0, 0.0, 1.0, 1.0 };
@@ -216,6 +230,7 @@ void drawObject() {
 	glPopMatrix();
 }
 
+// Função de display screen
 void display(void) {
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -224,55 +239,200 @@ void display(void) {
 	glutSwapBuffers();
 }
 
+// Timer de display
 void timer(int value) {
 	glutPostRedisplay();
 	glutTimerFunc(10, timer, 0);
 }
 
-void initialize() {
-	scaleX = 0.2;
-	scaleY = 0.2;
-	scaleZ = 0.2;
-	translateX = 0;
-	translateY = -40;
-	translateZ = -150;
+// Função para dar print nas posições do mouse por click
+void mouse(int button, int state, int x, int y)
+{
+	cout << "X: " << x << endl;
+	cout << "Y: " << y << endl;
+}
 
-
+// Função para criação da luz
+void lights() {
 	//Ativa o uso de luz
 	glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
 	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT1);
 
-	// determina a intensidade e cor da luz
-	GLfloat luz_ambiente[] = { 0.2, 0.2, 0.2, 1.0 };
-	GLfloat luz_difusa[] = { 0.8, 0.8, 0.8, 1.0 };
-	GLfloat luz_especular[] = { 1.0, 1.0, 1.0, 1.0 };
-	glLightfv(GL_LIGHT0, GL_AMBIENT, luz_ambiente);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, luz_difusa);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, luz_especular);
+	double angulo_luz = 180.0;
+	double tipo_luz = 0.0; // 0.0 = Direcional / 1.0 = Spotlight
 
-	//determina a posição da luz
-	GLfloat posicao_luz[] = { 400.0, 0.0, 0.0, 1.0 };
-	glLightfv(GL_LIGHT0, GL_POSITION, posicao_luz);
+	//// determina a intensidade e cor da luz
+	GLfloat luz_ambiente[] = { 0.0, 0.0, 0.0, 0.0 };
+	GLfloat luz_difusa[] = { 0.0, 0., 0., 0.0 };
+	GLfloat luz_especular[] = { 0.0, 0., 0.0, 0.0 };
+
+	// Controle luz 1
+	if (light1) {
+		glEnable(GL_LIGHT1);
+		GLfloat posicao_luz1[] = { -400, -225.0, 1.0, tipo_luz }; // x, y, z, w
+		GLfloat direcao_spotlight1[] = { 0.0, 0.0, -1.0 }; // x, y, z
+
+		double luz_ambiente_valor = 100.0;
+		luz_ambiente[0] = luz_ambiente_valor;
+		luz_ambiente[1] = luz_ambiente_valor;
+		luz_ambiente[2] = luz_ambiente_valor;
+		luz_ambiente[3] = luz_ambiente_valor;
+
+		double luz_difusa_valor = 0.0;
+		luz_difusa[0] = luz_difusa_valor;
+		luz_difusa[1] = luz_difusa_valor;
+		luz_difusa[2] = luz_difusa_valor;
+		luz_difusa[3] = luz_difusa_valor;
+
+		double luz_especular_valor = 0.0;
+		luz_especular[0] = luz_especular_valor;
+		luz_especular[1] = luz_especular_valor;
+		luz_especular[2] = luz_especular_valor;
+		luz_especular[3] = luz_especular_valor;
+
+		glLightfv(GL_LIGHT1, GL_DIFFUSE, luz_difusa);
+		glLightfv(GL_LIGHT1, GL_SPECULAR, luz_especular);
+		glLightfv(GL_LIGHT1, GL_AMBIENT, luz_ambiente);
+		glLightfv(GL_LIGHT1, GL_POSITION, posicao_luz1);
+
+		// Definindo atuação
+		glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 2.0);
+		glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 1.0);
+		glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.5);
+
+		// Definindo spotlight
+		glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, angulo_luz);
+		glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, direcao_spotlight1);
+		glLightf(GL_LIGHT1, GL_SPOT_EXPONENT, 0.0);
+	}
+	else {
+		glDisable(GL_LIGHT1);
+	}
+
+	// Controle luz 2
+	if (light2) {
+		glEnable(GL_LIGHT2);
+		GLfloat posicao_luz2[] = { 800.0, 0.0, 1.0, tipo_luz }; // x, y, z, w
+		GLfloat direcao_spotlight2[] = { 0.0, 0.0, -1.0 }; // x, y, z
+
+		double luz_ambiente_valor = 0.0;
+		luz_ambiente[0] = luz_ambiente_valor;
+		luz_ambiente[1] = luz_ambiente_valor;
+		luz_ambiente[2] = luz_ambiente_valor;
+		luz_ambiente[3] = luz_ambiente_valor;
+
+		double luz_difusa_valor = 100.0;
+		luz_difusa[0] = luz_difusa_valor;
+		luz_difusa[1] = luz_difusa_valor;
+		luz_difusa[2] = luz_difusa_valor;
+		luz_difusa[3] = luz_difusa_valor;
+
+		double luz_especular_valor = 0.0;
+		luz_especular[0] = luz_especular_valor;
+		luz_especular[1] = luz_especular_valor;
+		luz_especular[2] = luz_especular_valor;
+		luz_especular[3] = luz_especular_valor;
+
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, luz_difusa);
+		glLightfv(GL_LIGHT0, GL_SPECULAR, luz_especular);
+		glLightfv(GL_LIGHT0, GL_AMBIENT, luz_ambiente);
+		glLightfv(GL_LIGHT0, GL_POSITION, posicao_luz2);
+
+		// Definindo atuação
+		glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 2.0);
+		glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 1.0);
+		glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.5);
+
+		// Definindo spotlight
+		glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, angulo_luz);
+		glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direcao_spotlight2);
+		glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 0.0);
+	}
+	else {
+		glDisable(GL_LIGHT2);
+	}
+
+	// Controle luz 3
+	if (light3) {
+		glEnable(GL_LIGHT3);
+		GLfloat posicao_luz3[] = { 400.0, 0.0, 1.0, tipo_luz }; // x, y, z, w
+		GLfloat direcao_spotlight3[] = { 0.0, 0.0, -1.0 }; // x, y, z
+
+		double luz_ambiente_valor = 0.0;
+		luz_ambiente[0] = luz_ambiente_valor;
+		luz_ambiente[1] = luz_ambiente_valor;
+		luz_ambiente[2] = luz_ambiente_valor;
+		luz_ambiente[3] = luz_ambiente_valor;
+
+		double luz_difusa_valor = 0.0;
+		luz_difusa[0] = luz_difusa_valor;
+		luz_difusa[1] = luz_difusa_valor;
+		luz_difusa[2] = luz_difusa_valor;
+		luz_difusa[3] = luz_difusa_valor;
+
+		double luz_especular_valor = 100.0;
+		luz_especular[0] = luz_especular_valor;
+		luz_especular[1] = luz_especular_valor;
+		luz_especular[2] = luz_especular_valor;
+		luz_especular[3] = luz_especular_valor;
+
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, luz_difusa);
+		glLightfv(GL_LIGHT0, GL_SPECULAR, luz_especular);
+		glLightfv(GL_LIGHT0, GL_AMBIENT, luz_ambiente);
+		glLightfv(GL_LIGHT0, GL_POSITION, posicao_luz3);
+
+		// Definindo atuação
+		glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 2.0);
+		glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 1.0);
+		glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.5);
+
+		// Definindo spotlight
+		glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, angulo_luz);
+		glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direcao_spotlight3);
+		glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 0.0);
+	}
+	else {
+		glDisable(GL_LIGHT3);
+	}
 }
 
-int main(int argc, char** argv) {
+// Inicialização do glut e variaveis
+void initialize(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 	glutInitWindowSize(800, 450);
-	glOrtho(0, 800, 450, 0, -1.0, 1.0);
+	glOrtho(0.0f, 800, 450, 0.0f, 0.0f, 1.0f);
 	glutInitWindowPosition(20, 20);
 	glutCreateWindow("Trabson 2");
-	initialize();
+
+	// Inicializando variaveis globais
+	scale = 0.4;
+	translateX = 0;
+	translateY = -40;
+	translateZ = -150;
+	light1 = light2 = light3 = true;
+
+	// Corrigindo buffer de profundidade
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
+}
+
+int main(int argc, char** argv) {
+	// Inicializando glut, janela e propriedades
+	initialize(argc, argv);
+
+	// Instanciando funções que rodam no motor
 	glutReshapeFunc(reshape);
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
 	glutSpecialFunc(keyboard_special);
 	glutTimerFunc(10, timer, 0);
-	//loadObj("objs/mba1.obj");
-	loadObj("objs/square2.obj");
+	glutMouseFunc(mouse);
+
+	// Carregando .obj
+	loadObj("objs/mba1.obj");
+
+	// Inicializando motor principal
 	glutMainLoop();
 	return 0;
 }
