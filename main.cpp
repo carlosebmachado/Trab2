@@ -6,32 +6,61 @@
 
 using namespace std;
 
-// Globais
-
+// Variáveis globais
 unsigned int object;
 vector<vector<float>> vertices;
 vector<vector<int>> faces;
-vector<vector<float>> normais;
-vector<vector<float>> texturas;
+vector<vector<float>> normals;
+vector<vector<float>> textureBounds;
 float scale;
 float translateX, translateY, translateZ;
-float rotX, rotY, rotZ;
-
+float rotationX, rotationY, rotationZ;
 bool light1, light2, light3;
 
+// Métodos
 void lights();
+void loadObj(string);
+void keyboard(unsigned char, int, int);
+void keyboard_special(int, int, int);
+void reshape(int, int);
+void drawObject();
+void display();
+void timer(int);
+void mouse(int, int, int, int);
+void lights();
+void initialize(int, char**);
+
+
+int main(int argc, char** argv) {
+	// Inicializando glut, janela e propriedades
+	initialize(argc, argv);
+
+	// Instanciando funções que rodam no motor
+	glutReshapeFunc(reshape);
+	glutDisplayFunc(display);
+	glutKeyboardFunc(keyboard);
+	glutSpecialFunc(keyboard_special);
+	glutTimerFunc(10, timer, 0);
+	glutMouseFunc(mouse);
+
+	// Carregando .obj
+	loadObj("objs/mba1.obj");
+
+	// Inicializando motor principal
+	glutMainLoop();
+	return 0;
+}
+
 
 // Carregando arquivo OBJ
-void loadObj(string fname)
-{
+void loadObj(string fname) {
 	int read;
 	float x, y, z;
 	ifstream arquivo(fname);
 	if (!arquivo.is_open()) {
 		cout << "arquivo nao encontrado";
 		exit(1);
-	}
-	else {
+	} else {
 		string tipo;
 		while (arquivo >> tipo) {
 
@@ -64,7 +93,7 @@ void loadObj(string fname)
 				arquivo >> x >> y;
 				textura.push_back(x);
 				textura.push_back(y);
-				texturas.push_back(textura);
+				textureBounds.push_back(textura);
 			}
 
 			if (tipo == "vn") {
@@ -74,7 +103,7 @@ void loadObj(string fname)
 				normal.push_back(x);
 				normal.push_back(y);
 				normal.push_back(z);
-				normais.push_back(normal);
+				normals.push_back(normal);
 			}
 		}
 	}
@@ -117,40 +146,43 @@ void keyboard(unsigned char key, int x, int y) {
 		break;
 	case 55:
 		// Rotacionar para baixo
-		++rotX;
+		++rotationX;
 		break;
 	case 57:
 		// Rotacionar para cima
-		--rotX;
+		--rotationX;
 		break;
 	case 52:
 		// Rotacionar para esquerda
-		++rotY;
+		++rotationY;
 		break;
 	case 54:
 		// Rotacionar para direita
-		--rotY;
+		--rotationY;
 		break;
 	case 49:
 		// Rotacionar eixo z
-		++rotZ;
+		++rotationZ;
 		break;
 	case 51:
 		// Rotacionar eixo z
-		--rotZ;
+		--rotationZ;
 		break;
 	case 53:
-		rotX += rand() % 30 - 15;
-		rotY += rand() % 30 - 15;
-		rotZ += rand() % 20 - 10;
+		rotationX += rand() % 30 - 15;
+		rotationY += rand() % 30 - 15;
+		rotationZ += rand() % 20 - 10;
 		break;
 	case 'z':
+		// Ambiente
 		light1 = !light1;
 		break;
 	case 'x':
+		// Difusa
 		light2 = !light2;
 		break;
 	case 'c':
+		// Especular
 		light3 = !light3;
 		break;
 	}
@@ -203,20 +235,21 @@ void drawObject() {
 	glPushMatrix();
 	glColor3f(1.0, 0.23, 0.27);
 
-	// movimentar
+	// Movimentar
 	glTranslatef(translateX, translateY, translateZ);
 
-	// escalar
+	// Escalar
 	glScalef(scale, scale, scale);
 
-	// rotacionar
-	glRotatef(rotX, 1, 0, 0);
-	glRotatef(rotY, 0, 1, 0);
-	glRotatef(rotZ, 0, 0, 1);
+	// Rotacionar
+	glRotatef(rotationX, 1, 0, 0);
+	glRotatef(rotationY, 0, 1, 0);
+	glRotatef(rotationZ, 0, 0, 1);
 
+	// Luzes
 	lights();
 
-	//// determina as propriedades do material
+	// Determina as propriedades do material
 	GLfloat cor_verde[] = { 0.0, 1.0, 0.0, 1.0 };
 	GLfloat cor_branco[] = { 1.0, 1.0, 1.0, 1.0 };
 	GLfloat cor_azul[] = { 0.0, 0.0, 1.0, 1.0 };
@@ -231,7 +264,7 @@ void drawObject() {
 }
 
 // Função de display screen
-void display(void) {
+void display() {
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
@@ -246,8 +279,7 @@ void timer(int value) {
 }
 
 // Função para dar print nas posições do mouse por click
-void mouse(int button, int state, int x, int y)
-{
+void mouse(int button, int state, int x, int y) {
 	cout << "X: " << x << endl;
 	cout << "Y: " << y << endl;
 }
@@ -261,12 +293,12 @@ void lights() {
 	double angulo_luz = 180.0;
 	double tipo_luz = 0.0; // 0.0 = Direcional / 1.0 = Spotlight
 
-	//// determina a intensidade e cor da luz
+	// Determina a intensidade e cor da luz
 	GLfloat luz_ambiente[] = { 0.0, 0.0, 0.0, 0.0 };
 	GLfloat luz_difusa[] = { 0.0, 0., 0., 0.0 };
 	GLfloat luz_especular[] = { 0.0, 0., 0.0, 0.0 };
 
-	// Controle luz 1
+	// Controle luz 1 (ambiente)
 	if (light1) {
 		glEnable(GL_LIGHT1);
 		GLfloat posicao_luz1[] = { -400, -225.0, 1.0, tipo_luz }; // x, y, z, w
@@ -304,12 +336,11 @@ void lights() {
 		glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, angulo_luz);
 		glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, direcao_spotlight1);
 		glLightf(GL_LIGHT1, GL_SPOT_EXPONENT, 0.0);
-	}
-	else {
+	} else {
 		glDisable(GL_LIGHT1);
 	}
 
-	// Controle luz 2
+	// Controle luz 2 (difusa)
 	if (light2) {
 		glEnable(GL_LIGHT2);
 		GLfloat posicao_luz2[] = { 800.0, 0.0, 1.0, tipo_luz }; // x, y, z, w
@@ -347,12 +378,11 @@ void lights() {
 		glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, angulo_luz);
 		glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direcao_spotlight2);
 		glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 0.0);
-	}
-	else {
+	} else {
 		glDisable(GL_LIGHT2);
 	}
 
-	// Controle luz 3
+	// Controle luz 3 (especular)
 	if (light3) {
 		glEnable(GL_LIGHT3);
 		GLfloat posicao_luz3[] = { 400.0, 0.0, 1.0, tipo_luz }; // x, y, z, w
@@ -390,8 +420,7 @@ void lights() {
 		glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, angulo_luz);
 		glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direcao_spotlight3);
 		glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 0.0);
-	}
-	else {
+	} else {
 		glDisable(GL_LIGHT3);
 	}
 }
@@ -403,7 +432,7 @@ void initialize(int argc, char** argv) {
 	glutInitWindowSize(800, 450);
 	glOrtho(0.0f, 800, 450, 0.0f, 0.0f, 1.0f);
 	glutInitWindowPosition(20, 20);
-	glutCreateWindow("Trabson 2");
+	glutCreateWindow("Trabalho M1 - 2");
 
 	// Inicializando variaveis globais
 	scale = 0.4;
@@ -417,22 +446,13 @@ void initialize(int argc, char** argv) {
 	glDepthFunc(GL_LEQUAL);
 }
 
-int main(int argc, char** argv) {
-	// Inicializando glut, janela e propriedades
-	initialize(argc, argv);
+// Escreve na tela (reservado para futuros projetos)
+void RenderString(float x, float y, void* font, const unsigned char* string)
+{
+	char* c;
 
-	// Instanciando funções que rodam no motor
-	glutReshapeFunc(reshape);
-	glutDisplayFunc(display);
-	glutKeyboardFunc(keyboard);
-	glutSpecialFunc(keyboard_special);
-	glutTimerFunc(10, timer, 0);
-	glutMouseFunc(mouse);
+	glColor3f(1.0, 1.0, 1.0);
+	glRasterPos2f(x, y);
 
-	// Carregando .obj
-	loadObj("objs/mba1.obj");
-
-	// Inicializando motor principal
-	glutMainLoop();
-	return 0;
+	glutBitmapString(font, string);
 }
