@@ -15,6 +15,7 @@ vector<vector<float>> textureBounds;
 float scale;
 float translateX, translateY, translateZ;
 float rotationX, rotationY, rotationZ;
+float rotVel = 3.5;
 bool light1, light2, light3;
 
 // Métodos
@@ -44,7 +45,7 @@ int main(int argc, char** argv) {
 	glutMouseFunc(mouse);
 
 	// Carregando .obj
-	loadObj("objs/cube.obj");
+	loadObj("objs/elepham.obj");
 
 	// Inicializando motor principal
 	glutMainLoop();
@@ -113,7 +114,7 @@ void loadObj(string fname) {
 	glNewList(object, GL_COMPILE);
 	{
 		glPushMatrix();
-		glBegin(GL_QUADS);
+		glBegin(GL_TRIANGLES);
 		//glBegin(GL_LINES);
 
 		for (int i = 0; i < faces.size(); i++) {
@@ -122,11 +123,11 @@ void loadObj(string fname) {
 			glVertex3f(vertices[face[0]][0], vertices[face[0]][1], vertices[face[0]][2]);
 			glVertex3f(vertices[face[1]][0], vertices[face[1]][1], vertices[face[1]][2]);
 
-			glVertex3f(vertices[face[1]][0], vertices[face[1]][1], vertices[face[1]][2]);
+			//glVertex3f(vertices[face[1]][0], vertices[face[1]][1], vertices[face[1]][2]);
 			glVertex3f(vertices[face[2]][0], vertices[face[2]][1], vertices[face[2]][2]);
 
-			glVertex3f(vertices[face[2]][0], vertices[face[2]][1], vertices[face[2]][2]);
-			glVertex3f(vertices[face[0]][0], vertices[face[0]][1], vertices[face[0]][2]);
+			//glVertex3f(vertices[face[2]][0], vertices[face[2]][1], vertices[face[2]][2]);
+			//glVertex3f(vertices[face[0]][0], vertices[face[0]][1], vertices[face[0]][2]);
 
 		}
 		glEnd();
@@ -146,42 +147,42 @@ void keyboard(unsigned char key, int x, int y) {
 		break;
 	case 55:
 		// Rotacionar para baixo
-		++rotationX;
+		rotationX += rotVel;
 		break;
 	case 57:
 		// Rotacionar para cima
-		--rotationX;
+		rotationX -= rotVel;
 		break;
 	case 52:
 		// Rotacionar para esquerda
-		++rotationY;
+		rotationY += rotVel;
 		break;
 	case 54:
 		// Rotacionar para direita
-		--rotationY;
+		rotationY -= rotVel;
 		break;
 	case 49:
 		// Rotacionar eixo z
-		++rotationZ;
+		rotationZ += rotVel;
 		break;
 	case 51:
 		// Rotacionar eixo z
-		--rotationZ;
+		rotationZ -= rotVel;
 		break;
 	case 53:
 		rotationX += rand() % 30 - 15;
 		rotationY += rand() % 30 - 15;
 		rotationZ += rand() % 20 - 10;
 		break;
-	case 'z':
+	case 'q':
 		// Ambiente
 		light1 = !light1;
 		break;
-	case 'x':
+	case 'w':
 		// Difusa
 		light2 = !light2;
 		break;
-	case 'c':
+	case 'e':
 		// Especular
 		light3 = !light3;
 		break;
@@ -303,7 +304,7 @@ void lights() {
 		GLfloat posicao_luz1[] = { -400, -225.0, 1.0, tipo_luz }; // x, y, z, w
 		GLfloat direcao_spotlight1[] = { 0.0, 0.0, -1.0 }; // x, y, z
 
-		double luz_ambiente_valor = 100.0;
+		double luz_ambiente_valor = 1.0;
 		luz_ambiente[0] = luz_ambiente_valor;
 		luz_ambiente[1] = luz_ambiente_valor;
 		luz_ambiente[2] = luz_ambiente_valor;
@@ -315,8 +316,8 @@ void lights() {
 		glLightfv(GL_LIGHT1, GL_POSITION, posicao_luz1);
 
 		// Definindo atuação
-		glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 2.0);
-		glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 1.0);
+		glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 1.0);
+		glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.5);
 		glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.5);
 
 		// Definindo spotlight
@@ -335,8 +336,8 @@ void lights() {
 	// Controle luz 2 (difusa)
 	if (light2) {
 		glEnable(GL_LIGHT2);
-		GLfloat posicao_luz2[] = { 450, 0.0, -1.0, tipo_luz }; // x, y, z, w
-		GLfloat direcao_spotlight2[] = { 0.0, 0.0, -1.0 }; // x, y, z
+		GLfloat posicao_luz2[] = { 450, 0.0, 1.0, tipo_luz }; // x, y, z, w
+		GLfloat direcao_spotlight2[] = { 0.0, -1.0, -1.0 }; // x, y, z
 
 		double luz_difusa_valor = 100.0;
 		luz_difusa[0] = luz_difusa_valor;
@@ -344,20 +345,20 @@ void lights() {
 		luz_difusa[2] = luz_difusa_valor;
 		luz_difusa[3] = luz_difusa_valor;
 
-		glLightfv(GL_LIGHT0, GL_DIFFUSE, luz_difusa);
-		glLightfv(GL_LIGHT0, GL_SPECULAR, luz_especular);
-		glLightfv(GL_LIGHT0, GL_AMBIENT, luz_ambiente);
-		glLightfv(GL_LIGHT0, GL_POSITION, posicao_luz2);
+		glLightfv(GL_LIGHT2, GL_DIFFUSE, luz_difusa);
+		glLightfv(GL_LIGHT2, GL_SPECULAR, luz_especular);
+		glLightfv(GL_LIGHT2, GL_AMBIENT, luz_ambiente);
+		glLightfv(GL_LIGHT2, GL_POSITION, posicao_luz2);
 
 		// Definindo atuação
-		glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 2.0);
-		glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 1.0);
-		glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.5);
+		glLightf(GL_LIGHT2, GL_CONSTANT_ATTENUATION, 1.0);
+		glLightf(GL_LIGHT2, GL_LINEAR_ATTENUATION, 0.5);
+		glLightf(GL_LIGHT2, GL_QUADRATIC_ATTENUATION, 0.5);
 
 		// Definindo spotlight
-		glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, angulo_luz);
-		glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direcao_spotlight2);
-		glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 0.0);
+		glLightf(GL_LIGHT2, GL_SPOT_CUTOFF, angulo_luz);
+		glLightfv(GL_LIGHT2, GL_SPOT_DIRECTION, direcao_spotlight2);
+		glLightf(GL_LIGHT2, GL_SPOT_EXPONENT, 0.0);
 	} else {
 		double luz_difusa_valor = 0.0;
 		luz_difusa[0] = luz_difusa_valor;
@@ -373,26 +374,26 @@ void lights() {
 		GLfloat posicao_luz3[] = { 400.0, 0.0, 1.0, tipo_luz }; // x, y, z, w
 		GLfloat direcao_spotlight3[] = { 0.0, 0.0, -1.0 }; // x, y, z
 
-		double luz_especular_valor = 100.0;
+		double luz_especular_valor = 1.0;
 		luz_especular[0] = luz_especular_valor;
 		luz_especular[1] = luz_especular_valor;
 		luz_especular[2] = luz_especular_valor;
 		luz_especular[3] = luz_especular_valor;
 
-		glLightfv(GL_LIGHT0, GL_DIFFUSE, luz_difusa);
-		glLightfv(GL_LIGHT0, GL_SPECULAR, luz_especular);
-		glLightfv(GL_LIGHT0, GL_AMBIENT, luz_ambiente);
-		glLightfv(GL_LIGHT0, GL_POSITION, posicao_luz3);
+		glLightfv(GL_LIGHT3, GL_DIFFUSE, luz_difusa);
+		glLightfv(GL_LIGHT3, GL_SPECULAR, luz_especular);
+		glLightfv(GL_LIGHT3, GL_AMBIENT, luz_ambiente);
+		glLightfv(GL_LIGHT3, GL_POSITION, posicao_luz3);
 
 		// Definindo atuação
-		glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 2.0);
-		glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 1.0);
-		glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.5);
+		glLightf(GL_LIGHT3, GL_CONSTANT_ATTENUATION, 1.0);
+		glLightf(GL_LIGHT3, GL_LINEAR_ATTENUATION, 0.5);
+		glLightf(GL_LIGHT3, GL_QUADRATIC_ATTENUATION, 0.5);
 
 		// Definindo spotlight
-		glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, angulo_luz);
-		glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direcao_spotlight3);
-		glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 0.0);
+		glLightf(GL_LIGHT3, GL_SPOT_CUTOFF, angulo_luz);
+		glLightfv(GL_LIGHT3, GL_SPOT_DIRECTION, direcao_spotlight3);
+		glLightf(GL_LIGHT3, GL_SPOT_EXPONENT, 0.0);
 	} else {
 		double luz_especular_valor = 0.0;
 		luz_especular[0] = luz_especular_valor;
