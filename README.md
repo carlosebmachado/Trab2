@@ -13,3 +13,15 @@
 
 ### Escala
 - Teclas Page Up e Page Down: aumenta e diminui o objeto
+
+### Iluminação
+case 'q':
+		// Ambiente
+		light1 = !light1;
+		break;
+	case 'w':
+		// Difusa
+		light2 = !light2;
+		break;
+	case 'e':
+		// Especular
