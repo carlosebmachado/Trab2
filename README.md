@@ -1,4 +1,4 @@
-# Trabalho 2 - Obj e Iluminação
+# Graphic Computing 2 - Obj e Iluminação
 
 ## Comandos
 
